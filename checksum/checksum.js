@@ -1,7 +1,6 @@
 "use strict";
 
 var crypt = require('./crypt');
-var config = require('./pg');
 var util = require('util');
 var crypto = require('crypto');
 
@@ -9,37 +8,32 @@ var crypto = require('crypto');
 
 function paramsToString(params, mandatoryflag) {
   var data = '';
-  var flag = params.refund ? true : false;
-  delete params.refund;
   var tempKeys = Object.keys(params);
-  if (!flag) tempKeys.sort();
   tempKeys.forEach(function (key) {
+-	var n = params[key].includes("REFUND");	
+	
+ -	var m = params[key].includes("|");			
+ -		if(n == false || m == false)		
+ -		{		
     if (key !== 'CHECKSUMHASH' ) {
       if (params[key] === 'null') params[key] = '';
       if (!mandatoryflag || mandatoryParams.indexOf(key) !== -1) {
         data += (params[key] + '|');
       }
     }
-  });
+  }
+});
   return data;
 }
 
 
 function genchecksum(params, key, cb) {
-  var flag = params.refund ? true : false;
   var data = paramsToString(params);
-
-  crypt.gen_salt(4, function (err, salt) {
+crypt.gen_salt(4, function (err, salt) {
     var sha256 = crypto.createHash('sha256').update(data + salt).digest('hex');
     var check_sum = sha256 + salt;
     var encrypted = crypt.encrypt(check_sum, key);
-    if (flag) {
-      params.CHECKSUM = encodeURIComponent(encrypted);
-      params.CHECKSUM = encrypted;
-    } else {
-      params.CHECKSUMHASH = encodeURIComponent(encrypted);
       params.CHECKSUMHASH = encrypted;
-    }
     cb(undefined, params);
   });
 }
@@ -57,9 +51,6 @@ function genchecksumbystring(params, key, cb) {
 }
 
 function verifychecksum(params, key) {
-
-  if (!params) console.log("params are null");
-
   var data = paramsToString(params, false);
   //TODO: after PG fix on thier side remove below two lines
   if (params.CHECKSUMHASH) {
@@ -82,6 +73,7 @@ function verifychecksum(params, key) {
     return false;
   }
 }
+
 function verifychecksumbystring(params, key,checksumhash) {
 
     var checksum = crypt.decrypt(checksumhash, key);
@@ -96,38 +88,37 @@ function verifychecksumbystring(params, key,checksumhash) {
     }
   } 
 
+function genchecksumforrefund(params, key, cb) {
+  var data = paramsToStringrefund(params);
+crypt.gen_salt(4, function (err, salt) {
+    var sha256 = crypto.createHash('sha256').update(data + salt).digest('hex');
+    var check_sum = sha256 + salt;
+    var encrypted = crypt.encrypt(check_sum, key);
+      params.CHECKSUM = encodeURIComponent(encrypted);
+    cb(undefined, params);
+  });
+}
+
+function paramsToStringrefund(params, mandatoryflag) {
+  var data = '';
+  var tempKeys = Object.keys(params);
+  tempKeys.forEach(function (key) {
+ -	var m = params[key].includes("|");			
+ -		if(m == false)		
+ -		{		
+    if (key !== 'CHECKSUMHASH' ) {
+      if (params[key] === 'null') params[key] = '';
+      if (!mandatoryflag || mandatoryParams.indexOf(key) !== -1) {
+        data += (params[key] + '|');
+      }
+    }
+  }
+});
+  return data;
+}
+
 module.exports.genchecksum = genchecksum;
 module.exports.verifychecksum = verifychecksum;
 module.exports.verifychecksumbystring = verifychecksumbystring;
 module.exports.genchecksumbystring = genchecksumbystring;
-
-/* ---------------- TEST CODE ---------------- */
-
-(function () {
-
-  if (require.main === module) {
-       
-    var ver_param = {
-      MID: 'wVhtoq05771472615938',
-      ORDER_ID: 52,
-      CUST_ID: '298233',
-      TXN_AMOUNT: '1',
-      CHANNEL_ID: 'WEB',
-      INDUSTRY_TYPE_ID: 'Retail',
-      WEBSITE: 'PaytmMktPlace',
-      CHECKSUMHASH: '5xORNy+qP7G53XWptN7dh1AzD226cTTDsUe4yjAgKe19eO5olCPseqhFDmlmUTcSiEJFXuP/usVEjHlfMCgvqtI8rbkoUCVC3uKZzOBFpOw='
-    };
-    genchecksum(ver_param, config.MID, function (err, res) {
-      console.log(res);
-    });
-    if (verifychecksum(ver_param, config.MID)) {
-      console.log('verified checksum');
-    } else {
-      console.log("verification failed");
-    }
-
-  }
-}());
-
-
-
+module.exports.genchecksumforrefund = genchecksumforrefund;

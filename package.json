@@ -1,19 +1,16 @@
 {
-  "name": "paytm_web_sample_kit_nodejs",
+  "name": "node-web-server",
   "version": "1.0.0",
-  "description": "1. The *checksum.js* file contains *genchecksum()* and *verifychecksum()* functions. The merchant module should call these methods with the appropriate set of parameters as mentioned in the API document given [here][link1]  2. Keep all the files in the folder from where you will be calling the *genchecksum()* and *verifychecksum()* methods.   3. The *checksum/pg.js* file contains values for various parameters which need to be configured according to the values received by each merchant.",
+  "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/successanil/Paytm_Web_Sample_Kit_NodeJs.git"
-  },
-  "author": "Anil Kukreti",
+  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/successanil/Paytm_Web_Sample_Kit_NodeJs/issues"
-  },
-  "homepage": "https://github.com/successanil/Paytm_Web_Sample_Kit_NodeJs#readme"
+  "dependencies": {
+    "express": "^4.14.0",
+    "hbs": "^4.0.0"
+  }
 }
